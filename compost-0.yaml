@@ -36,7 +36,7 @@ i2c:
   id: bus_a
 
 sensor:
-  - platform: bme280
+  - platform: bme280_i2c
     temperature:
       name: "BME280 Temperature"
       id: bme280_temperature
