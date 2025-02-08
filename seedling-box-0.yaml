@@ -1,0 +1,77 @@
+esphome:
+  name: seedling-box-0
+
+esp32:
+  board: az-delivery-devkit-v4
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret ha_api_password
+
+ota:
+  platform: esphome
+  password: !secret ha_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_passphrase
+
+  # Enable fallback hotspot
+  ap:
+    ssid: !secret wifi_fallback_ssid
+    password: !secret wifi_fallback_passphrase
+
+web_server:
+  port: 80
+
+# Sync time with Home Assistant
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+# Text sensors with general information
+text_sensor:
+  # Expose ESPHome version as sensor
+  - platform: version
+    name: ESPHome Version
+  # Expose WiFi information as sensors
+  - platform: wifi_info
+    ip_address:
+      name: IP
+    ssid:
+      name: SSID
+    bssid:
+      name: BSSID
+
+  # Uptime
+  - platform: uptime
+    name: Uptime
+
+  # WiFi Signal Strength
+  - platform: wifi_signal
+    name: WiFi Signal
+    update_interval: 60s
+
+i2c:
+  sda: 1
+  scl: 2
+  scan: true
+  id: bus_a
+
+sensor:
+  - platform: bmp280_i2c
+    address: 0x76
+    update_interval: 60s
+    temperature:
+      name: "BMP280 Temperature"
+      id: bmp280_temperature
+    pressure:
+      name: "BMP280 Pressure"
+      id: bmp280_pressure
+
+one_wire:
+  - platform: gpio
+    pin: GPIO35
