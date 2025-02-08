@@ -57,4 +57,4 @@ sensor:
 
 one_wire:
   - platform: gpio
-    pin: GPIO35
+    pin: GPIO14
