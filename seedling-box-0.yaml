@@ -38,15 +38,6 @@ text_sensor:
   - platform: version
     name: ESPHome Version
 
-  # Uptime
-  - platform: uptime
-    name: Uptime
-
-  # WiFi Signal Strength
-  - platform: wifi_signal
-    name: WiFi Signal
-    update_interval: 60s
-
 i2c:
   sda: 1
   scl: 2
