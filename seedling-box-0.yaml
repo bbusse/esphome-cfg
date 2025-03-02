@@ -40,22 +40,37 @@ text_sensor:
     name: ESPHome Version
 
 i2c:
-  sda: 1
-  scl: 2
+  sda: 21
+  scl: 22
   scan: true
   id: bus_a
 
 sensor:
-  - platform: bmp280_i2c
-    address: 0x76
-    update_interval: 60s
+  - platform: bme280_i2c
     temperature:
-      name: "BMP280 Temperature"
-      id: bmp280_temperature
+      name: "BME280 Temperature"
+      id: bme280_temperature
     pressure:
-      name: "BMP280 Pressure"
-      id: bmp280_pressure
+      name: "BME280 Pressure"
+      id: bme280_pressure
+    humidity:
+      name: "BME280 Relative Humidity"
+      id: bme280_humidity
+    address: 0x76
+    update_interval: 15s
+  - platform: template
+    name: "Equivalent sea level pressure"
+    lambda: |-
+      const float STANDARD_ALTITUDE = 0.6; // in meters, see note
+      return id(bme280_pressure).state / powf(1 - ((0.0065 * STANDARD_ALTITUDE) /
+        (id(bme280_temperature).state + (0.0065 * STANDARD_ALTITUDE) + 273.15)), 5.257); // in hPa
+    update_interval: 15s
+    unit_of_measurement: 'hPa'
 
-one_wire:
-  - platform: gpio
-    pin: GPIO14
+light:
+  - platform: status_led
+    name: "Power State"
+    pin: GPIO32
+  - platform: status_led
+    name: "Network State"
+    pin: GPIO33
