@@ -1,0 +1,76 @@
+esphome:
+  name: seedling-box-1
+
+esp32:
+  board: az-delivery-devkit-v4
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret ha_api_key
+
+ota:
+  - platform: esphome
+    password: !secret ha_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_passphrase
+
+  # Enable fallback hotspot
+  ap:
+    ssid: !secret wifi_fallback_ssid
+    password: !secret wifi_fallback_passphrase
+
+web_server:
+  port: 80
+
+# Sync time with Home Assistant
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+# Text sensors with general information
+text_sensor:
+  # Expose ESPHome version as sensor
+  - platform: version
+    name: ESPHome Version
+
+i2c:
+  sda: 21
+  scl: 22
+  scan: true
+  id: bus_a
+
+sensor:
+  - platform: bme280_i2c
+    temperature:
+      name: "BME280 Temperature"
+      id: bme280_temperature
+    pressure:
+      name: "BME280 Pressure"
+      id: bme280_pressure
+    humidity:
+      name: "BME280 Relative Humidity"
+      id: bme280_humidity
+    address: 0x76
+    update_interval: 15s
+  - platform: template
+    name: "Equivalent sea level pressure"
+    lambda: |-
+      const float STANDARD_ALTITUDE = 0.6; // in meters, see note
+      return id(bme280_pressure).state / powf(1 - ((0.0065 * STANDARD_ALTITUDE) /
+        (id(bme280_temperature).state + (0.0065 * STANDARD_ALTITUDE) + 273.15)), 5.257); // in hPa
+    update_interval: 15s
+    unit_of_measurement: 'hPa'
+
+light:
+  - platform: status_led
+    name: "Power State"
+    pin: GPIO32
+  - platform: status_led
+    name: "Network State"
+    pin: GPIO33
