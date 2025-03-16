@@ -67,10 +67,26 @@ sensor:
     update_interval: 15s
     unit_of_measurement: 'hPa'
 
+output:
+  - platform: gpio
+    pin: GPIO25
+    id: gpio_lights_0
+  - platform: gpio
+    pin: GPIO26
+    id: gpio_fan
+
 light:
   - platform: status_led
-    name: "Power State"
+    name: "Power State LED"
     pin: GPIO32
   - platform: status_led
-    name: "Network State"
+    name: "Network State LED"
     pin: GPIO33
+  - platform: binary
+    output: gpio_lights_0
+    name: "Plant Lights"
+
+fan:
+  - platform: binary
+    output: gpio_fan
+    name: "Plant Fan"
