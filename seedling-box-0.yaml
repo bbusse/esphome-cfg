@@ -63,6 +63,7 @@ sensor:
       id: bme280_humidity
     address: 0x76
     update_interval: 15s
+
   - platform: template
     name: "Equivalent sea level pressure"
     lambda: |-
@@ -75,6 +76,23 @@ sensor:
   - platform: uptime
     type: seconds
     name: Uptime Sensor
+
+  # Reports the WiFi signal strength/RSSI in dB
+  - platform: wifi_signal
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+  # Reports the WiFi signal strength in %
+  - platform: copy
+    source_id: wifi_signal_db
+    name: "WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+    device_class: ""
 
 output:
   - platform: gpio
@@ -99,22 +117,6 @@ fan:
   - platform: binary
     output: gpio_fan
     name: "Plant Fan"
-
-sensor:
-  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
-    name: "WiFi Signal dB"
-    id: wifi_signal_db
-    update_interval: 60s
-    entity_category: "diagnostic"
-
-  - platform: copy # Reports the WiFi signal strength in %
-    source_id: wifi_signal_db
-    name: "WiFi Signal Percent"
-    filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "Signal %"
-    entity_category: "diagnostic"
-    device_class: ""
 
 esp32_ble_tracker:
   scan_parameters:
