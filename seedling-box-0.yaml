@@ -72,6 +72,10 @@ sensor:
     update_interval: 15s
     unit_of_measurement: 'hPa'
 
+  - platform: uptime
+    type: seconds
+    name: Uptime Sensor
+
 output:
   - platform: gpio
     pin: GPIO25
