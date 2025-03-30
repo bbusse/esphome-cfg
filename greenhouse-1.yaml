@@ -1,5 +1,10 @@
 esphome:
   name: greenhouse-1
+  friendly_name: Greenhouse 1
+  area: farm
+  platformio_options:
+    platform: espressif32
+    board: az-delivery-devkit-v4
 
 esp32:
   board: az-delivery-devkit-v4
@@ -9,11 +14,12 @@ logger:
 
 # Enable Home Assistant API
 api:
-  password: !secret ha_api_password
+  encryption:
+    key: !secret ha_api_key
 
 ota:
-  platform: esphome
-  password: !secret ha_ota_password
+  - platform: esphome
+    password: !secret ha_ota_password
 
 wifi:
   ssid: !secret wifi_ssid
@@ -37,30 +43,69 @@ text_sensor:
   # Expose ESPHome version as sensor
   - platform: version
     name: ESPHome Version
-  # Expose WiFi information as sensors
-  - platform: wifi_info
-    ip_address:
-      name: IP
-    ssid:
-      name: SSID
-    bssid:
-      name: BSSID
+
+i2c:
+  sda: 21
+  scl: 22
+  scan: true
+  id: bus_a
 
 sensor:
-  # Temperature / Humidity
-  - platform: dht
-    pin: D2
+  - platform: bme280_i2c
     temperature:
-      name: "Greenhouse Temperature"
+      name: "BME280 Temperature"
+      id: bme280_temperature
+    pressure:
+      name: "BME280 Pressure"
+      id: bme280_pressure
     humidity:
-      name: "Greenhouse Humidity"
-    update_interval: 180s
+      name: "BME280 Relative Humidity"
+      id: bme280_humidity
+    address: 0x76
+    update_interval: 15s
 
-  # Uptime
+  - platform: template
+    name: "Equivalent sea level pressure"
+    lambda: |-
+      const float STANDARD_ALTITUDE = 0.6; // in meters, see note
+      return id(bme280_pressure).state / powf(1 - ((0.0065 * STANDARD_ALTITUDE) /
+        (id(bme280_temperature).state + (0.0065 * STANDARD_ALTITUDE) + 273.15)), 5.257); // in hPa
+    update_interval: 15s
+    unit_of_measurement: 'hPa'
+
+  - platform: dallas_temp
+    name: temperature
+    update_interval: 600s
+
   - platform: uptime
-    name: Uptime
+    type: seconds
+    name: Uptime Sensor
 
-  # WiFi Signal Strength
+  # Reports the WiFi signal strength/RSSI in dB
   - platform: wifi_signal
-    name: WiFi Signal
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
     update_interval: 60s
+    entity_category: "diagnostic"
+
+  # Reports the WiFi signal strength in %
+  - platform: copy
+    source_id: wifi_signal_db
+    name: "WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+    device_class: ""
+
+light:
+  - platform: status_led
+    name: "Power State LED"
+    pin: GPIO32
+  - platform: status_led
+    name: "Network State LED"
+    pin: GPIO33
+
+one_wire:
+  - platform: gpio
+    pin: GPIO27
