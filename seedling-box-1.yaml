@@ -1,5 +1,10 @@
 esphome:
   name: seedling-box-1
+  friendly_name: Seedling Box 1
+  area: farm
+  platformio_options:
+    platform: espressif32
+    board: az-delivery-devkit-v4
 
 esp32:
   board: az-delivery-devkit-v4
@@ -58,6 +63,7 @@ sensor:
       id: bme280_humidity
     address: 0x76
     update_interval: 15s
+
   - platform: template
     name: "Equivalent sea level pressure"
     lambda: |-
@@ -67,10 +73,47 @@ sensor:
     update_interval: 15s
     unit_of_measurement: 'hPa'
 
+  - platform: uptime
+    type: seconds
+    name: Uptime Sensor
+
+  # Reports the WiFi signal strength/RSSI in dB
+  - platform: wifi_signal
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+  # Reports the WiFi signal strength in %
+  - platform: copy
+    source_id: wifi_signal_db
+    name: "WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+    device_class: ""
+
+output:
+  - platform: gpio
+    pin: GPIO26
+    id: gpio_lights_0
+  - platform: gpio
+    pin: GPIO25
+    id: gpio_fan
+
 light:
   - platform: status_led
-    name: "Power State"
+    name: "Power State LED"
     pin: GPIO32
   - platform: status_led
-    name: "Network State"
+    name: "Network State LED"
     pin: GPIO33
+  - platform: binary
+    output: gpio_lights_0
+    name: "Plant Lights"
+
+fan:
+  - platform: binary
+    output: gpio_fan
+    name: "Plant Fan"
