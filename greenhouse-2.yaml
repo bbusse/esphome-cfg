@@ -38,12 +38,6 @@ time:
   - platform: homeassistant
     id: homeassistant_time
 
-# Text sensors with general information
-text_sensor:
-  # Expose ESPHome version as sensor
-  - platform: version
-    name: ESPHome Version
-
 i2c:
   sda: 21
   scl: 22
@@ -78,6 +72,7 @@ sensor:
     update_interval: 600s
 
   - platform: uptime
+    id: uptime_s
     type: seconds
     name: Uptime Sensor
 
@@ -97,6 +92,36 @@ sensor:
     unit_of_measurement: "Signal %"
     entity_category: "diagnostic"
     device_class: ""
+
+text_sensor:
+  # Expose ESPHome version as sensor
+  - platform: version
+    name: ESPHome Version
+
+  - platform: template
+    name: "Uptime"
+    lambda: |-
+      uint32_t dur = id(uptime_s).state;
+      int days = 0;
+      int hours = 0;
+      int mins = 0;
+      if (dur > 86399) {
+        days = trunc(dur / 86400);
+        dur = dur - (days * 86400);
+      }
+      if (dur > 3599) {
+        hours = trunc(dur / 3600);
+        dur = dur - (hours * 3600);
+      }
+      if (dur > 59) {
+        mins = trunc(dur / 60);
+        dur = dur - (mins * 60);
+      }
+      char buffer[17];
+      sprintf(buffer, "%ud %02uh %02um %02us", days, hours, mins, dur);
+      return {buffer};
+    icon: mdi:clock-start
+    update_interval: 60s
 
 light:
   - platform: status_led
